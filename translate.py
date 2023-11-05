@@ -67,18 +67,16 @@ def record_audio():
     recording = np.concatenate(recording)  # Concatenate all recorded frames
     return np.array(recording, dtype='float64')
 
-def transcribe_audio_whisper(audio_data):
+def whisper_audio(audio_data):
     model_name = 'whisper-1'
     
     #Converting audio input into binary
     question_input = audio_data
-    question_file = open(audio_data, "rb")
+    question_file = open(question_input, "rb")
     
-    response = openai.Audio.transcribe(
-        
-        
-    )
-
+    response = openai.Audio.transcribe(api_key = CHATKEY, model = model_name, file = question_file, response_format='srt')
+    return response
+    
 def ask_openai(question, openai_client):
     # Encouraging the model to provide a concise answer
     modified_prompt = f"Translate the following into clear and concise English and answer in one short message:\n\n{question}"
@@ -108,7 +106,7 @@ def text_to_speech(text, lang=LANGUAGE_CODE):
 def on_button_press():
     print("Button pressed!")
     audio_data = record_audio()
-    question = transcribe_audio(audio_data)
+    question = whisper_audio(audio_data)
     print(f"Question: {question}")
     answer = ask_openai(question)
     print(f"Answer: {answer}")
@@ -120,7 +118,7 @@ def on_button_press():
 def on_keyboard_input(): #THIS IS FOR TESTING
     input("Press Enter to start recording...")
     audio_data = record_audio()
-    question = transcribe_audio(audio_data)
+    question = whisper_audio(audio_data)
     print(f"Question: {question}")
     answer = ask_openai(question, openai_client)
     print(f"Answer: {answer}")
