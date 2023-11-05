@@ -5,13 +5,13 @@ from gpiozero import Button
 from google.cloud import speech
 from gtts import gTTS
 import os
+import openai
 from openai import ChatCompletion
 import webrtcvad
 import collections
 
 # Configuration
 BUTTON_PIN = 17  # GPIO pin where the button is connected
-RECORD_SECONDS = 5  # Length of the recording after button press
 LANGUAGE_CODE = 'en-US'  # Language code for Google Speech-to-Text
 
 CHATKEY = os.getenv("OPENAI_API_KEY")
@@ -24,7 +24,7 @@ DEVICE_INDEX = 1  # Device index for microphone if not default
 openai_client = ChatCompletion(api_key=CHATKEY)
 
 # Set up the button
-button = Button(BUTTON_PIN)
+#button = Button(BUTTON_PIN)
 
 # Initialize Google Cloud client
 client = speech.SpeechClient()
@@ -34,6 +34,7 @@ def record_audio():
     fs = 44100  # Sample rate
     vad = webrtcvad.Vad(1)  # Create a VAD object
     vad.set_mode(1)  # Level of aggressiveness from 0 to 3
+    is_speech_started = False
 
     print("Recording...")
     frames = collections.deque(maxlen=10)  # A buffer to hold the last few frames
@@ -65,24 +66,37 @@ def record_audio():
     print("Done recording.")
     recording = np.concatenate(recording)  # Concatenate all recorded frames
     return np.array(recording, dtype='float64')
-# Function to transcribe audio to text
-def transcribe_audio(audio_data, language_code=LANGUAGE_CODE):
-    audio = speech.RecognitionAudio(content=audio_data.tobytes())
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=44100,
-        language_code=language_code,
-    )
-    response = client.recognize(config=config, audio=audio)
-    transcript = ''
-    for result in response.results:
-        transcript += result.alternatives[0].transcript
-    return transcript
 
-# Function to get a response from OpenAI
-def ask_openai(question):
-    response = openai_client.create(prompt=question, model="text-davinci-003")
-    return response.choices[0].message.content
+def transcribe_audio_whisper(audio_data):
+    model_name = 'whisper-1'
+    
+    #Converting audio input into binary
+    question_input = audio_data
+    question_file = open(audio_data, "rb")
+    
+    response = openai.Audio.transcribe(
+        
+        
+    )
+
+def ask_openai(question, openai_client):
+    # Encouraging the model to provide a concise answer
+    modified_prompt = f"Translate the following into clear and concise English and answer in one short message:\n\n{question}"
+
+    # Using CHATGPT to get the  concise response
+    response = openai_client.create(
+        prompt=modified_prompt,
+        model="gpt-3.5-turbo",
+        temperature=0.7,
+        max_tokens=150, 
+        stop=["\n"],    
+        n=1,            
+        presence_penalty=0, 
+        frequency_penalty=0
+    )
+    
+    return response.choices[0].text.strip()  # .text should be used instead of .message.content
+
 
 # Function to convert text to speech
 def text_to_speech(text, lang=LANGUAGE_CODE):
@@ -99,12 +113,24 @@ def on_button_press():
     answer = ask_openai(question)
     print(f"Answer: {answer}")
     text_to_speech(answer)
-
+    
 # Attach the button press event
-button.when_pressed = on_button_press
+#button.when_pressed = on_button_press
+
+def on_keyboard_input(): #THIS IS FOR TESTING
+    input("Press Enter to start recording...")
+    audio_data = record_audio()
+    question = transcribe_audio(audio_data)
+    print(f"Question: {question}")
+    answer = ask_openai(question, openai_client)
+    print(f"Answer: {answer}")
+    text_to_speech(answer)
+
 
 # Run forever
 print("Device is ready, press the button to ask a question.")
-while True:
-    pass
+#while True:
+#    pass
 
+while True:
+    on_keyboard_input()
