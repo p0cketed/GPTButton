@@ -12,14 +12,14 @@ from scipy.io.wavfile import write
 BUTTON_PIN = 17  # GPIO pin where the button is connected
 LANGUAGE_CODE = 'en-US'  # Language code for Google Speech-to-Text
 
-CHATKEY = os.getenv("OPENAI_API_KEY")
-if not CHATKEY:
-    raise ValueError("CHATKEY not functioning.\n")
+OPENAIKEY = os.getenv("OPENAI_API_KEY")
+if not OPENAIKEY:
+    raise ValueError("OPENAIKEY not functioning.\n")
 
 DEVICE_INDEX = 1  # Device index for microphone if not default
 
 # Set up the OpenAI API client
-openai_client = ChatCompletion(api_key=CHATKEY)
+openai_client = ChatCompletion(api_key=OPENAIKEY)
 
 # Set up the button
 #button = Button(BUTTON_PIN)
@@ -48,7 +48,7 @@ def whisper_audio(audio_data):
     question_input = audio_data
     question_file = open(question_input, "rb")
     
-    response = openai.Audio.transcribe(api_key = CHATKEY, model = model_name, file = question_file, response_format='srt')
+    response = openai.Audio.transcribe(api_key = OPENAIKEY, model = model_name, file = question_file, response_format='srt')
     return response
     
 def ask_openai(question, openai_client):
