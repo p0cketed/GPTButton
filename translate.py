@@ -4,8 +4,9 @@ import sounddevice as sd
 from gtts import gTTS
 import os
 import openai
-from openai import ChatCompletion
 from scipy.io.wavfile import write
+from pydub import AudioSegment
+from pydub.playback import play
 
 # Configuration
 BUTTON_PIN = 17  # GPIO pin where the button is connected
@@ -46,16 +47,23 @@ def whisper_audio(audio_data):
     
 def ask_openai(question):
     # Using CHATGPT to get a concise response
+    
     response = openai.ChatCompletion.create(
-        messages=[
-            {"role": "system", "content": "You are an at-home smart assistant that gives helpful and concise answers to residents."},
-            {"role": "user", "content": f"Translate the following into clear and concise English and answer in one short message:\n\n{question}"}
-        ],
+        messages = [
+        {
+            "role": "system",
+            "content": "You are an AI knowledgeable in general facts and can provide very concise answers upon request."
+        },
+        {
+            "role": "user",
+            "content": f"{question}"
+        }
+    ],
         model="gpt-3.5-turbo",
         temperature=0.7,
-        max_tokens=150,
-        stop=None,  # If you want to ensure the completion isn't cut off, you might not want to use the stop parameter
+        stop=None,
         n=1,
+        max_tokens = 300,
         presence_penalty=0,
         frequency_penalty=0
     )
@@ -64,11 +72,20 @@ def ask_openai(question):
     return response.choices[0].message['content'].strip()
 
 
+def change_speed(sound, speed=4.0):
+    sound_with_altered_frame_rate = sound._spawn(sound.raw_data, overrides={
+        "frame_rate": int(sound.frame_rate * speed)
+    })
+    return sound_with_altered_frame_rate.set_frame_rate(sound.frame_rate)
+
 # Function to convert text to speech
-def text_to_speech(text, lang=LANGUAGE_CODE, filename='response.mp3'):
+def text_to_speech(text, lang=LANGUAGE_CODE, filename='response.mp3', speed=1.0):
     tts = gTTS(text=text, lang=lang)
     tts.save(filename)
-    os.system(f'mpg123 {filename}')
+    sound = AudioSegment.from_mp3(filename)
+    faster_sound = change_speed(sound, speed=speed)
+    play(faster_sound)
+    faster_sound.export(filename, format="mp3")  # Export the altered file if needed
     os.remove(filename)
     print(f"Deleted {filename}")
 
