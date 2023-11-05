@@ -61,7 +61,7 @@ def ask_openai(question, openai_client):
         model="gpt-3.5-turbo",
         temperature=0.7,
         max_tokens=150, 
-        stop=["\n"],    
+        stop=["\n"],
         n=1,            
         presence_penalty=0, 
         frequency_penalty=0
