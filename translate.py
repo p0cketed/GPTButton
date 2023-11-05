@@ -17,9 +17,6 @@ if not OPENAIKEY:
 
 DEVICE_INDEX = 1  # Device index for microphone if not default
 
-# Set up the OpenAI API client
-openai_client = ChatCompletion(api_key=OPENAIKEY)
-
 # Set up the button
 #button = Button(BUTTON_PIN)
 
@@ -47,23 +44,24 @@ def whisper_audio(audio_data):
     response = openai.Audio.transcribe(api_key = OPENAIKEY, model = model_name, file = question_file, response_format='srt')
     return response
     
-def ask_openai(question, openai_client):
-    # Encouraging the model to provide a concise answer
-    modified_prompt = f"Translate the following into clear and concise English and answer in one short message:\n\n{question}"
-
-    # Using CHATGPT to get the  concise response
-    response = openai_client.create(
-        prompt=modified_prompt,
+def ask_openai(question):
+    # Using CHATGPT to get a concise response
+    response = openai.ChatCompletion.create(
+        messages=[
+            {"role": "system", "content": "You are an at-home smart assistant that gives helpful and concise answers to residents."},
+            {"role": "user", "content": f"Translate the following into clear and concise English and answer in one short message:\n\n{question}"}
+        ],
         model="gpt-3.5-turbo",
         temperature=0.7,
-        max_tokens=150, 
-        stop=["\n"],
-        n=1,            
-        presence_penalty=0, 
+        max_tokens=150,
+        stop=None,  # If you want to ensure the completion isn't cut off, you might not want to use the stop parameter
+        n=1,
+        presence_penalty=0,
         frequency_penalty=0
     )
-    
-    return response.choices[0].text.strip()  # .text should be used instead of .message.content
+
+    # Extracting the text content from the response
+    return response.choices[0].message['content'].strip()
 
 
 # Function to convert text to speech
@@ -93,6 +91,8 @@ def on_keyboard_input(): #THIS IS FOR TESTING
     answer = ask_openai(question, openai_client)
     print(f"Answer: {answer}")
     text_to_speech(answer)
+    os.remove(audio_data)
+    print(f"Deleted {audio_data}")
 
 
 # Run forever
