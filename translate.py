@@ -1,7 +1,6 @@
 
 import sounddevice as sd
 #from gpiozero import Button
-from google.cloud import speech
 from gtts import gTTS
 import os
 import openai
@@ -23,9 +22,6 @@ openai_client = ChatCompletion(api_key=OPENAIKEY)
 
 # Set up the button
 #button = Button(BUTTON_PIN)
-
-# Initialize Google Cloud client
-client = speech.SpeechClient()
 
 # Function to record audio
 def record_audio(filename='recorded_audio.wav', duration=5, fs=44100):
