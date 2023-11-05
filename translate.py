@@ -13,11 +13,15 @@ import collections
 BUTTON_PIN = 17  # GPIO pin where the button is connected
 RECORD_SECONDS = 5  # Length of the recording after button press
 LANGUAGE_CODE = 'en-US'  # Language code for Google Speech-to-Text
-OPENAI_API_KEY = 'your_openai_api_key_here'  # OpenAI API key
+
+CHATKEY = os.getenv("OPENAI_API_KEY")
+if not CHATKEY:
+    raise ValueError("CHATKEY not functioning.\n")
+
 DEVICE_INDEX = 1  # Device index for microphone if not default
 
 # Set up the OpenAI API client
-openai_client = ChatCompletion(api_key=OPENAI_API_KEY)
+openai_client = ChatCompletion(api_key=CHATKEY)
 
 # Set up the button
 button = Button(BUTTON_PIN)
