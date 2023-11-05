@@ -72,7 +72,7 @@ def ask_openai(question):
     return response.choices[0].message['content'].strip()
 
 
-def change_speed(sound, speed=4.0):
+def change_speed(sound, speed=1.0):
     sound_with_altered_frame_rate = sound._spawn(sound.raw_data, overrides={
         "frame_rate": int(sound.frame_rate * speed)
     })
