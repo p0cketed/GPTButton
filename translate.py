@@ -9,6 +9,7 @@ import openai
 from openai import ChatCompletion
 import webrtcvad
 import collections
+from scipy.io.wavfile import write
 
 # Configuration
 BUTTON_PIN = 17  # GPIO pin where the button is connected
@@ -30,42 +31,18 @@ openai_client = ChatCompletion(api_key=CHATKEY)
 client = speech.SpeechClient()
 
 # Function to record audio
-def record_audio():
-    fs = 44100  # Sample rate
-    vad = webrtcvad.Vad(1)  # Create a VAD object
-    vad.set_mode(1)  # Level of aggressiveness from 0 to 3
-    is_speech_started = False
-
+def record_audio(filename='recorded_audio.wav', duration=5, fs=44100):
     print("Recording...")
-    frames = collections.deque(maxlen=10)  # A buffer to hold the last few frames
-    silence_frames = collections.deque(maxlen=10)  # A buffer to hold silence frames for comparison
-    recording = []  # A list to store recorded frames
-    is_speech = False  # Flag to keep track of when speech starts
-    
-    # Stream audio
-    with sd.InputStream(samplerate=fs, channels=1, dtype='int16') as stream:
-        while True:
-            frame, overflowed = stream.read(int(fs * 0.1))  # Read 100ms of audio
-            is_speech = vad.is_speech(frame.tobytes(), fs)
 
-            if not is_speech and is_speech_started:
-                silence_frames.append(frame)  # If we have started speech, collect silence frames
-                if len(silence_frames) == silence_frames.maxlen:
-                    break  # If enough silence has accumulated, break the loop
-            else:
-                recording.extend(silence_frames)  # Add any accumulated silence frames to recording
-                silence_frames.clear()  # Clear silence frames buffer
-                recording.append(frame)  # Add current frame to recording
-                is_speech_started = True  # Set the speech flag
+    # Record the audio
+    audio_data = sd.rec(int(duration * fs), samplerate=fs, channels=1)
+    sd.wait()  # Wait for the recording to finish
 
-            frames.append(frame)  # Always add the current frame to the frames buffer
-            if len(frames) == frames.maxlen and not is_speech_started:
-                # If the frames buffer is full and we have not detected speech, clear the buffer
-                frames.clear()
-    
-    print("Done recording.")
-    recording = np.concatenate(recording)  # Concatenate all recorded frames
-    return np.array(recording, dtype='float64')
+    # Save the audio to a file
+    write(filename, fs, audio_data)
+
+    print(f"Done recording. Saved as {filename}")
+    return filename
 
 def whisper_audio(audio_data):
     model_name = 'whisper-1'
