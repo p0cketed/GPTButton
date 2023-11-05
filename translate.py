@@ -1,14 +1,11 @@
 
 import sounddevice as sd
-import numpy as np
-from gpiozero import Button
+#from gpiozero import Button
 from google.cloud import speech
 from gtts import gTTS
 import os
 import openai
 from openai import ChatCompletion
-import webrtcvad
-import collections
 from scipy.io.wavfile import write
 
 # Configuration
