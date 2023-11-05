@@ -88,7 +88,7 @@ def on_keyboard_input(): #THIS IS FOR TESTING
     audio_data = record_audio()
     question = whisper_audio(audio_data)
     print(f"Question: {question}")
-    answer = ask_openai(question, openai_client)
+    answer = ask_openai(question)
     print(f"Answer: {answer}")
     text_to_speech(answer)
     os.remove(audio_data)
