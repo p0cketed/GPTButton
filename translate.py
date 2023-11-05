@@ -65,10 +65,12 @@ def ask_openai(question):
 
 
 # Function to convert text to speech
-def text_to_speech(text, lang=LANGUAGE_CODE):
+def text_to_speech(text, lang=LANGUAGE_CODE, filename='response.mp3'):
     tts = gTTS(text=text, lang=lang)
-    tts.save('response.mp3')
-    os.system('mpg123 response.mp3')
+    tts.save(filename)
+    os.system(f'mpg123 {filename}')
+    os.remove(filename)
+    print(f"Deleted {filename}")
 
 # Main function to handle the button press
 def on_button_press():
@@ -83,16 +85,16 @@ def on_button_press():
 # Attach the button press event
 #button.when_pressed = on_button_press
 
-def on_keyboard_input(): #THIS IS FOR TESTING
+def on_keyboard_input():  # THIS IS FOR TESTING
     input("Press Enter to start recording...")
-    audio_data = record_audio()
-    question = whisper_audio(audio_data)
+    audio_filename = record_audio()
+    question = whisper_audio(audio_filename)
     print(f"Question: {question}")
     answer = ask_openai(question)
     print(f"Answer: {answer}")
     text_to_speech(answer)
-    os.remove(audio_data)
-    print(f"Deleted {audio_data}")
+    os.remove(audio_filename)
+    print(f"Deleted {audio_filename}")
 
 
 # Run forever
