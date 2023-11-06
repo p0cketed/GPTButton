@@ -83,7 +83,7 @@ def text_to_speech(text, lang=LANGUAGE_CODE, filename='response.mp3'):
     # Build the voice request, here we are assuming a neutral gender
     voice = texttospeech.VoiceSelectionParams(
         language_code=lang,
-        ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+        ssml_gender=texttospeech.SsmlVoiceGender.MALE
     )
 
     # Select the type of audio file you want returned
@@ -102,6 +102,10 @@ def text_to_speech(text, lang=LANGUAGE_CODE, filename='response.mp3'):
     # Play the audio file
     sound = AudioSegment.from_mp3(filename)
     play(sound)
+    
+    # After playing the sound, delete the file
+    os.remove(filename)
+    print(f"Deleted {filename}")
 
 
 # Main function to handle the button press
