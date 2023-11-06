@@ -1,7 +1,8 @@
 
 import sounddevice as sd
 #from gpiozero import Button
-from gtts import gTTS
+from google.cloud import texttospeech
+
 import os
 import openai
 from scipy.io.wavfile import write
@@ -17,6 +18,9 @@ if not OPENAIKEY:
     raise ValueError("OPENAIKEY not functioning.\n")
 
 DEVICE_INDEX = 1  # Device index for microphone if not default
+
+#Google TTS client
+client = texttospeech.TextToSpeechClient()
 
 # Set up the button
 #button = Button(BUTTON_PIN)
@@ -63,7 +67,7 @@ def ask_openai(question):
         temperature=0.7,
         stop=None,
         n=1,
-        max_tokens = 300,
+        max_tokens = 600,
         presence_penalty=0,
         frequency_penalty=0
     )
@@ -71,23 +75,34 @@ def ask_openai(question):
     # Extracting the text content from the response
     return response.choices[0].message['content'].strip()
 
+# Function to convert text to speech using Google Cloud Text-to-Speech
+def text_to_speech(text, lang=LANGUAGE_CODE, filename='response.mp3'):
+    # Set the text input to be synthesized
+    synthesis_input = texttospeech.SynthesisInput(text=text)
 
-def change_speed(sound, speed=1.0):
-    sound_with_altered_frame_rate = sound._spawn(sound.raw_data, overrides={
-        "frame_rate": int(sound.frame_rate * speed)
-    })
-    return sound_with_altered_frame_rate.set_frame_rate(sound.frame_rate)
+    # Build the voice request, here we are assuming a neutral gender
+    voice = texttospeech.VoiceSelectionParams(
+        language_code=lang,
+        ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+    )
 
-# Function to convert text to speech
-def text_to_speech(text, lang=LANGUAGE_CODE, filename='response.mp3', speed=1.0):
-    tts = gTTS(text=text, lang=lang)
-    tts.save(filename)
+    # Select the type of audio file you want returned
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3
+    )
+
+    # Perform the text-to-speech request on the text input with the selected voice parameters and audio file type
+    response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
+
+    # Save the audio to a file
+    with open(filename, 'wb') as out:
+        out.write(response.audio_content)
+        print(f"Generated speech saved to {filename}")
+
+    # Play the audio file
     sound = AudioSegment.from_mp3(filename)
-    faster_sound = change_speed(sound, speed=speed)
-    play(faster_sound)
-    faster_sound.export(filename, format="mp3")  # Export the altered file if needed
-    os.remove(filename)
-    print(f"Deleted {filename}")
+    play(sound)
+
 
 # Main function to handle the button press
 def on_button_press():
