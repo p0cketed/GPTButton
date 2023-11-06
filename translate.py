@@ -114,7 +114,7 @@ def on_button_press():
     print(f"Answer: {answer}")
     text_to_speech(answer)
     
-# Attach the button press event
+# Attach the button press event working..
 #button.when_pressed = on_button_press
 
 def on_keyboard_input():  # THIS IS FOR TESTING
